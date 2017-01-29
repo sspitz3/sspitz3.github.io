@@ -1,0 +1,93 @@
+---
+title: "Machine Learning Project"
+author: "Stephen"
+date: "January, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+#Overview
+We construct a model based on exercise data to predict what class each movement falls into.
+
+#Data Cleaning
+We load the data from disk.  Most of the columns are irrelevant, so we subset to the relevant data.
+
+```{r}
+library(caret)
+data<-read.csv("C:/Users/Stephen Spitz/Desktop/pml-training.csv")
+data2<-read.csv("C:/Users/Stephen Spitz/Desktop/pml-testing.csv")
+fct<-function(x) is.numeric(data[,x])&&sum(is.na(data[,x]))<1
+cols<-sapply(1:length(names(data)),fct)
+training<-data[,cols]
+training$classe<-data$classe
+testing<-data[,cols]
+testing$classe<-data2$classe
+```
+
+#Cross Validation
+We choose a 10-fold cross validation strategy.  We divide the training set into 10 sections.
+
+```{r}
+folds<-createFolds(training$classe,10)
+training1<-training[folds[[1]],]
+trainingnot1<-training[-folds[[1]],]
+training2<-training[folds[[2]],]
+trainingnot2<-training[-folds[[2]],]
+training3<-training[folds[[3]],]
+trainingnot3<-training[-folds[[3]],]
+training4<-training[folds[[4]],]
+trainingnot4<-training[-folds[[4]],]
+training5<-training[folds[[5]],]
+trainingnot5<-training[-folds[[5]],]
+training6<-training[folds[[6]],]
+trainingnot6<-training[-folds[[6]],]
+training7<-training[folds[[7]],]
+trainingnot7<-training[-folds[[7]],]
+training8<-training[folds[[8]],]
+trainingnot8<-training[-folds[[8]],]
+training9<-training[folds[[9]],]
+trainingnot9<-training[-folds[[9]],]
+training10<-training[folds[[10]],]
+trainingnot10<-training[-folds[[10]],]
+```
+
+Now we create random forest models on each section and check them on the remainder of the training set.
+
+```{r}
+model1<-train(classe~.,method="rf",data=training1)
+model2<-train(classe~.,method="rf",data=training2)
+model3<-train(classe~.,method="rf",data=training3)
+model4<-train(classe~.,method="rf",data=training4)
+model5<-train(classe~.,method="rf",data=training5)
+model6<-train(classe~.,method="rf",data=training6)
+model7<-train(classe~.,method="rf",data=training7)
+model8<-train(classe~.,method="rf",data=training8)
+model9<-train(classe~.,method="rf",data=training9)
+model10<-train(classe~.,method="rf",data=training10)
+```
+
+Now we calculate the accuracy
+
+```{r}
+acc<-function(x,y) sum(diag(table(predict(x,y),y$classe)))/sum(table(predict(x,y),y$classe))
+a1<-acc(model1,trainingnot1)
+a2<-acc(model2,trainingnot2)
+a3<-acc(model3,trainingnot3)
+a4<-acc(model4,trainingnot4)
+a5<-acc(model5,trainingnot5)
+a6<-acc(model6,trainingnot6)
+a7<-acc(model7,trainingnot7)
+a8<-acc(model8,trainingnot8)
+a9<-acc(model9,trainingnot9)
+a10<-acc(model10,trainingnot10)
+```
+
+The accuracy is excellent.  Therefore, this is a good model.  To estimate the accuracy, average the accuracies from cross validation.
+
+```{r}
+(a1+a2+a3+a4+a5+a6+a7+a8+a9+a10)/10
+```
+
+
+Therefore, the final model is the random forest model.
